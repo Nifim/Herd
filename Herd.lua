@@ -1,28 +1,24 @@
 _addon = {}
 _addon.name = 'Herd'
-_addon.version = '1.3'
+_addon.version = '1.3.5'
 _addon.author = 'Nifim'
 _addon.commands = {'herd'}
-require('logger')
+
+herd = {}
+
 require('strings')
 res = require('resources')
-state = 'stand'
-to = 0
-htol = 0.314
+state = 'stand' -- default state is stand
+
 haj = 0
 roam = 5
+htol = 0.157
+
 Sheep = true
 Shepherd = ''
 shepherd_last = {x=0, y=0}
-local logger = {}
-logger.defaults = {}
 
-logger.defaults.logtofile = false
-logger.defaults.defaultfile = 'lua.log'
-logger.defaults.logcolor = 207
-logger.defaults.errorcolor = 167
-logger.defaults.warningcolor = 200
-logger.defaults.noticecolor = 160
+
 
 help_text = [[Herd - Commands:
 1. //herd help - Displays this help menu.
@@ -31,7 +27,9 @@ help_text = [[Herd - Commands:
 3. //herd (j)oin - Causes box to join the herd and follow the current shepherd
 4. //herd (l)eave - Causes box to leave the herd and follow the current shepherd
 5. //herd (r)elease - Causes all boxs to leave herd and cease following
- ]]	 
+ ]]	
+ --
+ -- Windower Events (Main)
 windower.register_event('ipc message', function (raw_msg)
     local id = windower.ffxi.get_player().id
     raw_msg = raw_msg and raw_msg:lower()
@@ -73,31 +71,21 @@ windower.register_event('addon command', function (cmd,...)
       print(help_text)
     end
   end)
-
 windower.register_event('postrender', function()
     if Shepherd ~= '' then
-      if state == 'stand' then
-        stand()
-      elseif state == 'follow' then
-        follow()
-      end
+      herd[state]()
     end
   end)
-
-function stand()
+--
+-- Herd States
+function herd.stand()
   local shepherd = windower.ffxi.get_mob_by_id(Shepherd)
   local sheep = windower.ffxi.get_mob_by_id(windower.ffxi.get_player().id)
   if shepherd ~= nil then
     local x = shepherd.x - sheep.x
-    local y = shepherd.y - sheep.y 
-    hto = math.atan2(x, y)
-    if hto < -1.5707963267948966192313216916398 then
-      hto = math.pi - (math.abs(math.atan2(x, y) - (math.pi/2)) - math.pi)
-    else
-      hto = hto - (math.pi/2)
-    end
+    local y = shepherd.y - sheep.y     
+    hto = sheep.facing
     if shepherd.distance:sqrt() > roam and (shepherd.x ~= shepherd_last.x or shepherd.y ~= shepherd_last.y) then
-      start = os.clock
       state = 'follow'
       roam = roam - math.random(2.00001,4.49999)
     end
@@ -105,56 +93,115 @@ function stand()
   end
 end
 
-function follow()
+function herd.follow()
   local shepherd = windower.ffxi.get_mob_by_id(Shepherd)
   local sheep = windower.ffxi.get_mob_by_id(windower.ffxi.get_player().id)
-  if (shepherd ~= nil and shepherd.distance:sqrt() > roam and (to <= 0 or os.clock - start < to)) then
-    local x = shepherd.x - sheep.x
-    local y = shepherd.y - sheep.y 
-    local h = math.atan2(x, y)			
-    if haj == 0 then
-      haj = 0.0559244155884 + math.random(0.00000000000000001, 0.00000000000000009)
-    end
-    if h < -1.5707963267948966192313216916398 then
-      h = math.pi - (math.abs(math.atan2(x, y) - (math.pi/2)) - math.pi)
-    else
-      h = math.atan2(x, y) - (math.pi/2)
-    end
-    if hto ~= h and math.abs(hto - h) > htol then
-      local herr = math.abs(hto - h) 
+  if (shepherd ~= nil and shepherd.distance:sqrt() > roam) then
+    local h = herd.get_heading(shepherd, sheep)
+    --check for if heading needs to be adjusted
+    if hto ~= h and math.abs(math.abs(hto) - math.abs(h)) > htol then    
+      --Check for Turn around
+      herd.turn_around(h)
+      --Turn to the Left
       if hto > h then
-        if hto > 0 and  0 > h and hto > 2 then
-          hto = hto + 0.0559244155884002
-        else
-          hto = hto - 0.0559244155884002
-        end
-        if hto > math.pi then
-          hto = -math.pi + (hto - math.pi)
-        end
+        herd.turn_left(h)
+        --Turn to the Right
       elseif hto < h then
-        if hto < 0 and 0 < h and hto < -2 then
-          hto = hto - 0.0559244155884002
-        else
-          hto = hto + 0.0559244155884002
-        end
-        if hto < -math.pi then
-          hto = math.pi + (hto + math.pi)
-        end
+        herd.turn_right(h)
       end
-
-      windower.ffxi.run(hto)
-    else
-
-    end
-    if sheep.autorun == nil then
-      windower.ffxi.run(hto)
-    end	
+    --Execute run at calculated heading
+    windower.ffxi.run(hto)
   else
-    state = 'stand'
-    roam = 5
-    windower.ffxi.run(false) 
+    windower.ffxi.run(hto)
+  end
+else
+  --stop running you have reached the shepard
+  state = 'stand'
+  roam = 5
+  haj = 0
+  windower.ffxi.run(false) 
+end
+end
+function herd.menu()
+  
+end
+--
+-- Envermoment Functions
+function herd.get_heading(shepherd, sheep)
+  local x = shepherd.x - sheep.x
+  local y = shepherd.y - sheep.y 
+  local h = math.atan2(x, y)			
+  if haj == 0 then
+    haj = 0.0559244155884 + math.random(-0.0000000000003, 0.0000000000006)
+  end
+  --Adjust heading 90 degrees i dont know why but its needed -1.5707963267948966192313216916398 
+  if h < -math.pi/2 then
+    --headings in the sw quad need to be handled properly
+    h = math.pi - (math.abs(h - (math.pi/2)) - math.pi)
+  else
+    --headings in the remaining quads are handled like so
+    h = h - (math.pi/2)
+  end
+  return h
+end
+--
+-- Turning Functions
+function herd.turn_around(h)
+  htolo = hto-(math.pi*0.75)
+  htohi = hto-(math.pi*1.25) 
+  if htolo < -math.pi then
+    htolo = math.pi - math.abs(htolo + math.pi)
+  end
+  if htohi < -math.pi then
+    htohi = math.pi - math.abs(htohi + math.pi)
+  end
+  if htolo < htohi and h > 0 then
+    htolo = math.pi + (htolo + math.pi)
+  elseif htolo < htohi and h < 0 then
+    htohi = -math.pi + (htohi - math.pi)
+  end
+  --windower.add_to_chat(4, "hto: "..hto.." htohi: "..htohi.." htolo: "..htolo.." h: "..h)      
+  if h < htolo and h > htohi then 
+    hto = hto-math.pi       
+    if hto < -math.pi then
+      hto = math.pi - math.abs(hto + math.pi)
+    end
+    windower.ffxi.turn(hto)
+  end 
+end
+function herd.turn_left(h)   
+  --this handles 0 corssing to continue with the correct heading adjustment
+  if hto > 0 and  0 > h and hto > 2 then
+    hto = hto + 0.0559244155884002
+  else
+    hto = hto - 0.0559244155884002
+  end
+  --this handles the actually pi crossing when hto is greater then pi
+  if hto > math.pi then
+    hto = -math.pi + (hto - math.pi)
   end
 end
+function herd.turn_right(h)
+  if hto < 0 and 0 < h and hto < -2 then
+    hto = hto - 0.0559244155884002
+  else
+    hto = hto + 0.0559244155884002
+  end
+  if hto < -math.pi then
+    hto = math.pi + (hto + math.pi)
+  end
+end
+--
+-- Menu Functions
+function herd.home_point()
+  
+end
+function herd.way_point()
+
+end
+
+--
+-- Misc. Functions
 function bustAcap(s)
   return (s:gsub("^%l", string.upper))
 end
