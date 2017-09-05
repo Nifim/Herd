@@ -28,16 +28,26 @@
 * 5. (r)elease - Causes all boxs to leave herd and cease following
   - sends ipc message commanding all boxs to perform //herd leave
   - maybe sent from any box (does not need to be master)
-
+* 6a. (m)enu - toggles auto-menu feature of herd
+  - only stops shepherd from sending open menu messages.
+* 6b. (m)enu (a)dd|(r)emove [Name] - add or remove the name of approve npc for your sheep to open the menus of if you do.
+  - The sheep do not auto respond to the menu they only open it when the shepherd does.
+* 6c. (m)enu (l)ist - list all npc's currently on the approved list for sheep to interact with.
+  - defualts include: undulating confluence,cavernous maw, eschan portal #XX, and veridical conflux #XX
+* 7.  (f)ollow - toggles auto-follow feature of herd
+  - when toggled from disabled to enabled the sheep will not move until the shepard does even if they are outside the roam distance
+* 8.  roam [start_distance] [end_distance] - sets distance to beging following shepherd and distanec to stop
+  - sheep will not maintain the minimum distance only stay with in the maximum
+  - values can not be the same but 20.1 and 20 are diffrent if you want to be like that
 ----
 
 #### To do: ####
 * Open settings to user.
-  * roam distance
+  * roam distance --CHECK
 * Add Menu following functions
- * Home point
+ * Home point--CHECK
  * Way point
- * etc.
+ * etc.--CHECK
 * Handle bug where in new shepherd's last location(where they stopped rendering) is deemed their current location for new sheep that can not actually see the shepherd
 * Create job profiles 
   * this would have combat distances
