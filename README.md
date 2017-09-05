@@ -1,6 +1,6 @@
 **Author:**  Nifim<br>
-**Version:**  1.3.5<br>
-**Date:** Oct. 25, 2016<br>
+**Version:**  2.0.0<br>
+**Date:** Sep. 04, 2017<br>
 
 # Herd #
 
