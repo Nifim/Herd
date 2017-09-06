@@ -1,6 +1,6 @@
 _addon = {}
 _addon.name = 'Herd'
-_addon.version = '2.0.1'
+_addon.version = '2.0.2'
 _addon.author = 'Nifim'
 _addon.commands = {'herd'}
 
