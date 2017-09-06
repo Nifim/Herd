@@ -82,7 +82,7 @@ function herd.recieve_ipc(raw)
   local player = windower.ffxi.get_player()
   raw = raw and raw:lower()
   msg = string.split(''..raw, ',')   
-  print(msg[1] or 'nil')
+  --print(msg[1] or 'nil')
   if herd.ipc[msg[1]] then
     herd.ipc[msg[1]](msg)
   end
