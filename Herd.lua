@@ -1,6 +1,6 @@
 _addon = {}
 _addon.name = 'Herd'
-_addon.version = '2.0.0'
+_addon.version = '2.0.1'
 _addon.author = 'Nifim'
 _addon.commands = {'herd'}
 
@@ -82,6 +82,7 @@ function herd.recieve_ipc(raw)
   local player = windower.ffxi.get_player()
   raw = raw and raw:lower()
   msg = string.split(''..raw, ',')   
+  print(msg[1] or 'nil')
   if herd.ipc[msg[1]] then
     herd.ipc[msg[1]](msg)
   end
@@ -163,7 +164,7 @@ function herd.cmd.menu(arg)
       windower.send_ipc_message('menu, false')
     else
       _menu = true
-      notice('Auto-Menu Enabled')
+      notice('Auto-Menus Enabled')
       windower.send_ipc_message('menu, true')
     end  
   elseif arg[2] ~= nil and (arg[1] == 'a' or arg[1] =='add') then 
@@ -242,7 +243,6 @@ function herd.stand()
     hto = sheep.facing
     if _follow == true and shepherd.distance:sqrt() > roam and (shepherd.x ~= shepherd_last.x or shepherd.y ~= shepherd_last.y) then
       state = 'follow'
-      --begin = begin - math.random(2.00001,4.49999)
     end
     shepherd_last = shepherd
   end
@@ -359,7 +359,7 @@ function packet_2()
 end
 function herd.warp_packets(packet, packet2)
   local p_target = windower.ffxi.get_mob_by_id(packet['Target'])
-  if string.match(p_target.name, 'Home Ponit') then
+  if string.match(p_target.name, 'Home Point') then
     packet["Option Index"] = 2
     packet["_unknown1"] = option_ID
     packet["Automated Message"] = true  
@@ -453,20 +453,13 @@ function herd.menu_id(pid, data)
       menu = 'confluence'        
     elseif S{55,200}:contains(mID) then
       menu = 'cavernous'
-    end  
---    if mID >= 50XX and mID <= 50XX then
---      menu = 'way_point'
---    end    
---    if mID == 30 then
---      menu = dimmian
---    end        
+    end       
     if menu ~= '' then
       herd[menu](pid, bytes)
     end
   elseif pid == 0x01A then    
     local w = windower.ffxi.get_info()
     local p = packets.parse('outgoing', data)    
-    --if (p['Target'] == 17850899 and w.zone == 262) or (p['Target'] == 17830000 and w.zone == 257) or (p['Target'] == 17863390 and w.zone == 265) then 
     if _menu == true and menus:contains(string.lower(windower.ffxi.get_mob_by_id(p['Target']).name)) then
       local tid = string.format('%x', p['Target'])
       local zid = string.format('%x', w.zone)
