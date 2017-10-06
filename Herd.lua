@@ -1,6 +1,6 @@
 _addon = {}
 _addon.name = 'Herd'
-_addon.version = '2.0.2'
+_addon.version = '2.0.3'
 _addon.author = 'Nifim'
 _addon.commands = {'herd'}
 
@@ -111,6 +111,9 @@ function herd.ipc.follow(msg)
     notice('Auto-Follow Enabled')
   end  
 end
+function herd.ipc.release(msg)
+  windower.send_command('input //herd leave')
+end
 function herd.ipc.shepherd(msg)
   _shepherd = msg[2]
   shepName = windower.ffxi.get_mob_by_id(msg[2]).name   
@@ -131,8 +134,6 @@ function herd.ipc.menu_select(msg)
   local oID = tonumber(msg[5],16)
   herd.menu_select(tID,zID,pID,oID)
 end
-
-
 --
 -- Herd Commands
 function herd.command(cmd,...)
@@ -342,7 +343,7 @@ function herd.menu(id, data, modified)
       if p["Option Index"] == 0 and p["_unknown1"] == 16384 and option_ID then      
         p, p2 = herd.warp_packets(p, p2)
         option_ID = nil
-        return packets.build(p)      
+        return packets.build(p)
       elseif p["Option Index"] == 8 and p["_unknown1"] == 0 then   
         menu_openned = true
       elseif p["Option Index"] == 0 and p["_unknown1"] == 16384 then
