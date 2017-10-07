@@ -1,6 +1,6 @@
 _addon = {}
 _addon.name = 'Herd'
-_addon.version = '2.0.3'
+_addon.version = '2.0.5'
 _addon.author = 'Nifim'
 _addon.commands = {'herd'}
 
@@ -218,7 +218,7 @@ function herd.cmd.shepherd(arg)
     windower.send_ipc_message('shepherd,'..id)  
   else
     _sheep = true
-    capped_arg = bustAcap(arg[1])
+    capped_arg = arg[1]:gsub("^%l", string.upper)
     _shepherd = windower.ffxi.get_mob_by_name(capped_arg).id  
   end
 end
@@ -343,6 +343,7 @@ function herd.menu(id, data, modified)
       if p["Option Index"] == 0 and p["_unknown1"] == 16384 and option_ID then      
         p, p2 = herd.warp_packets(p, p2)
         option_ID = nil
+        menu_openned = false
         return packets.build(p)
       elseif p["Option Index"] == 8 and p["_unknown1"] == 0 then   
         menu_openned = true
@@ -417,12 +418,11 @@ function herd.menu_open(tID, zID)
   world = windower.ffxi.get_info()
   if zID == world.zone then
     menu_target = windower.ffxi.get_mob_by_id(tID)
-    if menu_target and menu_target.distance:sqrt() <= 5.9 then
+    if menu_target and menu_target.distance:sqrt() <= 5.2 then
       local p = packets.new('outgoing', 0x01a, {
           ["Target"] = menu_target.id,
           ["Target Index"] = menu_target.index,
         })
-      menu_openned = true
       packets.inject(p)
     end
   end
