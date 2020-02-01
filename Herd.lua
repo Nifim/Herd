@@ -184,7 +184,7 @@ function herd.cmd.menu(arg)
     print('Menu removed '..name)
   else
     for k in pairs(menus) do
-      windower.add_to_chat(4,'Menu: k')
+      windower.add_to_chat(4,'Menu: ' .. k)
     end
   end
 end
@@ -401,7 +401,7 @@ function herd.warp_packets(packet, packet2)
     if packet["_unknown1"] ~= 16384 then
       coroutine.schedule(packet_2,7)
     end
-  elseif string.match(p_target.name, 'Ethereal Igress') then
+  elseif string.match(p_target.name, 'Ethereal Ingress') then
     packet["Option Index"] = 0
     packet["_unknown1"] = option_ID
     packet["Automated Message"] = true  
